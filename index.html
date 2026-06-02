@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#C8102E" />
+<title>Registro de Turno · Sugal</title>
+<link rel="manifest" href="manifest.json" />
+<style>
+  /* ── RESET & BASE ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --red: #C8102E;
+    --red-dark: #a00d24;
+    --red-light: #fff0f2;
+    --red-mid: #f5c0c8;
+    --bg: #f2f2f7;
+    --card: #ffffff;
+    --border: rgba(0,0,0,0.1);
+    --text: #1c1c1e;
+    --text2: #6c6c70;
+    --text3: #aeaeb2;
+    --success: #34c759;
+    --warning: #ff9500;
+    --radius: 10px;
+    --radius-lg: 16px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  html, body {
+    height: 100%;
+    font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overscroll-behavior: none;
+  }
+
+  /* ── LAYOUT ── */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    max-width: 430px;
+    margin: 0 auto;
+    background: var(--bg);
+    position: relative;
+  }
+
+  /* ── HEADER ── */
+  .hdr {
+    background: var(--red);
+    padding: 12px 16px 10px;
+    padding-top: max(12px, env(safe-area-inset-top));
+    flex-shrink: 0;
+  }
+  .hdr-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .hdr-title { color: #fff; font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
+  .hdr-sub { color: rgba(255,255,255,0.75); font-size: 11px; margin-top: 1px; }
+  .hdr-actions { display: flex; align-items: center; gap: 6px; }
+  .hist-btn {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.35);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .hdr-bottom { display: flex; align-items: center; gap: 8px; }
+  .date-input {
+    flex: 1;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 13px;
+    padding: 6px 10px;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .date-input::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.8; cursor: pointer; }
+  .turno-pills { display: flex; gap: 5px; }
+  .turno-pill {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.8);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .turno-pill.active { background: #fff; color: var(--red); border-color: #fff; font-weight: 600; }
+
+  /* ── SCROLL BODY ── */
+  .scroll-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── SECTION ── */
+  .sec-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text2);
+    padding: 0 2px;
+    margin-bottom: -2px;
+  }
+
+  /* ── COUNTER GRID ── */
+  .cnt-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .cnt-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .cnt-card.span2 { grid-column: span 2; flex-direction: row; align-items: center; justify-content: space-between; }
+  .cnt-card.accent { background: var(--red-light); }
+  .cnt-card.danger-accent { background: #fff8f0; }
+  .cnt-name {
+    font-size: 11px;
+    color: var(--text2);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1.2;
+  }
+  .cnt-name .icon { font-size: 13px; }
+  .cnt-name.red { color: var(--red); }
+  .cnt-name.warn { color: var(--warning); }
+  .cnt-ctrl { display: flex; align-items: center; gap: 6px; }
+  .cb {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 300;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.1s, background 0.1s;
+    user-select: none;
+    -webkit-user-select: none;
+    line-height: 1;
+  }
+  .cb:active { transform: scale(0.9); }
+  .cb.plus { background: var(--red); color: #fff; border-color: var(--red); font-size: 20px; font-weight: 400; }
+  .cb.plus:active { background: var(--red-dark); }
+  .cv {
+    font-size: 20px;
+    font-weight: 700;
+    min-width: 26px;
+    text-align: center;
+    color: var(--text);
+    transition: transform 0.15s;
+  }
+  .cv.red { color: var(--red); }
+  .cv.bump { transform: scale(1.4); }
+
+  /* ── RECHAZOS ── */
+  .rec-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .rec-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 7px 9px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .rec-card.accent { background: var(--red-light); }
+  .rec-card.span2 { grid-column: span 2; }
+  .rec-lbl { font-size: 10.5px; color: var(--text); font-weight: 500; flex: 1; line-height: 1.2; }
+  .rec-lbl small { display: block; font-size: 9px; color: var(--red); font-weight: 400; }
+  .rec-val {
+    font-size: 13px; font-weight: 700;
+    color: var(--red);
+    background: var(--red-light);
+    border-radius: 99px;
+    min-width: 22px;
+    text-align: center;
+    padding: 1px 5px;
+  }
+  .rb {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 300;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.1s;
+    user-select: none;
+    -webkit-user-select: none;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .rb:active { transform: scale(0.88); }
+  .rb.plus { background: var(--red); color: #fff; border-color: var(--red); font-size: 16px; }
+
+  /* ── OTRO ROW ── */
+  .otro-row {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 7px 9px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .otro-input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 11px;
+    padding: 5px 8px;
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+  }
+  .otro-input:focus { border-color: var(--red); }
+
+  /* ── SAVE FOOTER ── */
+  .footer {
+    padding: 8px 12px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    background: var(--bg);
+    flex-shrink: 0;
+  }
+  .save-btn {
+    width: 100%;
+    padding: 14px 0;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-lg);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: transform 0.12s, background 0.12s;
+    letter-spacing: -0.2px;
+  }
+  .save-btn:active { transform: scale(0.98); background: var(--red-dark); }
+  .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .mod-meta { text-align: center; font-size: 10px; color: var(--text3); margin-top: 5px; }
+
+  /* ── MODAL TRASVASIJE ── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 100;
+    display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .overlay.show { opacity: 1; pointer-events: all; }
+  .modal-sheet {
+    background: var(--card);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px 32px;
+    width: 100%;
+    max-width: 430px;
+    transform: translateY(100%);
+    transition: transform 0.25s cubic-bezier(0.32,0.72,0,1);
+  }
+  .overlay.show .modal-sheet { transform: translateY(0); }
+  .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+  .modal-sub { font-size: 13px; color: var(--text2); margin-bottom: 18px; line-height: 1.4; }
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-btn {
+    flex: 1;
+    padding: 14px 0;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    background: var(--bg);
+    color: var(--text);
+    transition: transform 0.1s;
+  }
+  .modal-btn:active { transform: scale(0.97); }
+  .modal-btn.si { background: var(--red); color: #fff; border-color: var(--red); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%; transform: translateX(-50%) translateY(-80px);
+    background: var(--text);
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 200;
+    transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--success); }
+  .toast.error { background: #ff3b30; }
+
+  /* ── HISTORIAL PANEL ── */
+  .hist-panel {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    z-index: 50;
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
+    display: flex; flex-direction: column;
+    max-width: 430px;
+    left: 50%; margin-left: -215px;
+  }
+  @media (max-width: 430px) { .hist-panel { left: 0; margin-left: 0; } }
+  .hist-panel.show { transform: translateX(0); }
+  .hist-hdr {
+    background: var(--red);
+    padding: 14px 16px;
+    padding-top: max(14px, env(safe-area-inset-top));
+    display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0;
+  }
+  .hist-back {
+    color: #fff; font-size: 22px; cursor: pointer;
+    background: none; border: none; padding: 0; line-height: 1;
+  }
+  .hist-hdr-title { color: #fff; font-size: 16px; font-weight: 600; }
+  .hist-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .hist-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  .hist-card:active { transform: scale(0.98); }
+  .hist-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .hist-date { font-size: 14px; font-weight: 600; }
+  .hist-turno {
+    font-size: 11px; font-weight: 600;
+    padding: 2px 10px; border-radius: 99px;
+  }
+  .hist-turno.dia { background: #fff8e1; color: #b36000; }
+  .hist-turno.noche { background: #e8eaf6; color: #3949ab; }
+  .hist-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hist-stat { font-size: 11px; color: var(--text2); }
+  .hist-stat b { color: var(--text); }
+  .hist-empty { text-align: center; color: var(--text2); font-size: 14px; padding: 40px 20px; }
+
+  /* ── SPINNER ── */
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .save-btn.loading .spinner { display: block; }
+  .save-btn.loading .btn-text { display: none; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-top">
+      <div>
+        <div class="hdr-title">📋 Registro de Turno</div>
+        <div class="hdr-sub">Sugal Group · Quinta de Tilcoco</div>
+      </div>
+      <div class="hdr-actions">
+        <button class="hist-btn" onclick="abrirHistorial()">🕐 Historial</button>
+      </div>
+    </div>
+    <div class="hdr-bottom">
+      <input type="date" class="date-input" id="fechaInput" />
+      <div class="turno-pills">
+        <div class="turno-pill active" id="pillDia" onclick="setTurno('DIA')">☀ Día</div>
+        <div class="turno-pill" id="pillNoche" onclick="setTurno('NOCHE')">🌙 Noche</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCROLL BODY -->
+  <div class="scroll-body" id="scrollBody">
+
+    <!-- OPERACIONES -->
+    <div class="sec-label">Operaciones del turno</div>
+    <div class="cnt-grid">
+
+      <div class="cnt-card">
+        <div class="cnt-name">👷 Operadores</div>
+        <div class="cnt-ctrl">
+          <div class="cb" onclick="cambiar('operadores',-1)">−</div>
+          <div class="cv" id="val-operadores">0</div>
+          <div class="cb plus" onclick="cambiar('operadores',1)">+</div>
+        </div>
+      </div>
+
+      <div class="cnt-card">
+        <div class="cnt-name">📦 FCL</div>
+        <div class="cnt-ctrl">
+          <div class="cb" onclick="cambiar('fcl',-1)">−</div>
+          <div class="cv" id="val-fcl">0</div>
+          <div class="cb plus" onclick="cambiar('fcl',1)">+</div>
+        </div>
+      </div>
+
+      <div class="cnt-card">
+        <div class="cnt-name">🪵 Pallets</div>
+        <div class="cnt-ctrl">
+          <div class="cb" onclick="cambiar('pallets',-1)">−</div>
+          <div class="cv" id="val-pallets">0</div>
+          <div class="cb plus" onclick="cambiar('pallets',1)">+</div>
+        </div>
+      </div>
+
+      <div class="cnt-card danger-accent">
+        <div class="cnt-name warn">⚠️ Accidentes</div>
+        <div class="cnt-ctrl">
+          <div class="cb" onclick="cambiar('accidentes',-1)">−</div>
+          <div class="cv" id="val-accidentes">0</div>
+          <div class="cb plus" onclick="cambiar('accidentes',1)">+</div>
+        </div>
+      </div>
+
+      <div class="cnt-card accent span2">
+        <div class="cnt-name red">🔄 Trasvasije <small style="font-size:9px;font-weight:400;color:#999;margin-left:4px">auto + manual</small></div>
+        <div class="cnt-ctrl">
+          <div class="cb" onclick="cambiar('trasvasije',-1)">−</div>
+          <div class="cv red" id="val-trasvasije">0</div>
+          <div class="cb plus" onclick="cambiar('trasvasije',1)">+</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RECHAZOS -->
+    <div class="sec-label">Rechazos por tipo</div>
+    <div class="rec-grid">
+
+      <div class="rec-card accent span2">
+        <div class="rec-lbl">Envase no conforme<small>Toca + para preguntar si implica trasvasije</small></div>
+        <div class="rec-val" id="val-envase">0</div>
+        <div style="display:flex;gap:3px;flex-shrink:0;">
+          <div class="rb" onclick="cambiarRec('envase',-1)">−</div>
+          <div class="rb plus" onclick="abrirModalEnvase()">+</div>
+        </div>
+      </div>
+
+      <div class="rec-card">
+        <div class="rec-lbl">BRSSP</div>
+        <div class="rec-val" id="val-brssp">0</div>
+        <div style="display:flex;gap:3px;">
+          <div class="rb" onclick="cambiarRec('brssp',-1)">−</div>
+          <div class="rb plus" onclick="cambiarRec('brssp',1)">+</div>
+        </div>
+      </div>
+
+      <div class="rec-card">
+        <div class="rec-lbl">BRCSP</div>
+        <div class="rec-val" id="val-brcsp">0</div>
+        <div style="display:flex;gap:3px;">
+          <div class="rb" onclick="cambiarRec('brcsp',-1)">−</div>
+          <div class="rb plus" onclick="cambiarRec('brcsp',1)">+</div>
+        </div>
+      </div>
+
+      <div class="rec-card">
+        <div class="rec-lbl">Boquilla no conforme</div>
+        <div class="rec-val" id="val-boquilla">0</div>
+        <div style="display:flex;gap:3px;">
+          <div class="rb" onclick="cambiarRec('boquilla',-1)">−</div>
+          <div class="rb plus" onclick="cambiarRec('boquilla',1)">+</div>
+        </div>
+      </div>
+
+      <div class="rec-card">
+        <div class="rec-lbl">Bolsa suelta</div>
+        <div class="rec-val" id="val-bolsa">0</div>
+        <div style="display:flex;gap:3px;">
+          <div class="rb" onclick="cambiarRec('bolsa',-1)">−</div>
+          <div class="rb plus" onclick="cambiarRec('bolsa',1)">+</div>
+        </div>
+      </div>
+
+      <div class="rec-card">
+        <div class="rec-lbl">Sobre peso</div>
+        <div class="rec-val" id="val-sobrepeso">0</div>
+        <div style="display:flex;gap:3px;">
+          <div class="rb" onclick="cambiarRec('sobrepeso',-1)">−</div>
+          <div class="rb plus" onclick="cambiarRec('sobrepeso',1)">+</div>
+        </div>
+      </div>
+
+      <div class="rec-card">
+        <div class="rec-lbl">Bajo peso</div>
+        <div class="rec-val" id="val-bajopeso">0</div>
+        <div style="display:flex;gap:3px;">
+          <div class="rb" onclick="cambiarRec('bajopeso',-1)">−</div>
+          <div class="rb plus" onclick="cambiarRec('bajopeso',1)">+</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- OTRO -->
+    <div class="otro-row">
+      <div class="rec-lbl" style="font-size:11px;white-space:nowrap;font-weight:500;">Otro</div>
+      <div class="rec-val" id="val-otro">0</div>
+      <div style="display:flex;gap:3px;flex-shrink:0;">
+        <div class="rb" onclick="cambiarRec('otro',-1)">−</div>
+        <div class="rb plus" onclick="cambiarRec('otro',1)">+</div>
+      </div>
+      <input class="otro-input" id="otroTexto" type="text" placeholder="Describir motivo..." maxlength="120" />
+    </div>
+
+  </div><!-- /scroll-body -->
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <button class="save-btn" id="saveBtn" onclick="guardarTurno()">
+      <span class="btn-text">💾 Guardar / Actualizar turno</span>
+      <div class="spinner"></div>
+    </button>
+    <div class="mod-meta" id="metaMod">Sin registros guardados para esta fecha y turno</div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- MODAL TRASVASIJE -->
+<div class="overlay" id="modalOverlay">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚠️ Envase no conforme +1</div>
+    <div class="modal-sub">¿Este envase implica trasvasije?<br>Si seleccionas "Sí", se sumará 1 al contador de trasvasije automáticamente.</div>
+    <div class="modal-btns">
+      <button class="modal-btn si" onclick="confirmarEnvase(true)">✅ Sí, trasvasije</button>
+      <button class="modal-btn" onclick="confirmarEnvase(false)">❌ Solo rechazo</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- HISTORIAL PANEL -->
+<div class="hist-panel" id="histPanel">
+  <div class="hist-hdr">
+    <button class="hist-back" onclick="cerrarHistorial()">←</button>
+    <div class="hist-hdr-title">🕐 Historial de registros</div>
+  </div>
+  <div class="hist-body" id="histBody">
+    <div class="hist-empty">Cargando historial...</div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  CONFIGURACIÓN — PEGA AQUÍ TU URL DE APPS SCRIPT
+// ─────────────────────────────────────────────
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzO5AmMmqN6MZZHcluyCdSgVGgVwJuWmG7aNfT-deBlI5NocGcXWTYk_6rYYizzM644cg/exec';
+
+// ─────────────────────────────────────────────
+//  ESTADO
+// ─────────────────────────────────────────────
+let turno = 'DIA';
+let registroExistente = false;
+
+const estado = {
+  operadores: 0, fcl: 0, pallets: 0,
+  accidentes: 0, trasvasije: 0,
+  envase: 0, brssp: 0, brcsp: 0,
+  boquilla: 0, bolsa: 0, sobrepeso: 0,
+  bajopeso: 0, otro: 0, otroTexto: ''
+};
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+function init() {
+  const hoy = new Date();
+  const yyyy = hoy.getFullYear();
+  const mm = String(hoy.getMonth()+1).padStart(2,'0');
+  const dd = String(hoy.getDate()).padStart(2,'0');
+  document.getElementById('fechaInput').value = `${yyyy}-${mm}-${dd}`;
+  document.getElementById('fechaInput').addEventListener('change', cargarRegistro);
+  cargarRegistro();
+}
+
+// ─────────────────────────────────────────────
+//  TURNO
+// ─────────────────────────────────────────────
+function setTurno(t) {
+  turno = t;
+  document.getElementById('pillDia').classList.toggle('active', t === 'DIA');
+  document.getElementById('pillNoche').classList.toggle('active', t === 'NOCHE');
+  cargarRegistro();
+}
+
+// ─────────────────────────────────────────────
+//  CONTADORES
+// ─────────────────────────────────────────────
+function cambiar(campo, delta) {
+  estado[campo] = Math.max(0, estado[campo] + delta);
+  renderVal(campo);
+}
+
+function cambiarRec(campo, delta) {
+  estado[campo] = Math.max(0, estado[campo] + delta);
+  renderVal(campo);
+}
+
+function renderVal(campo) {
+  const el = document.getElementById('val-' + campo);
+  if (!el) return;
+  el.textContent = estado[campo];
+  el.classList.add('bump');
+  setTimeout(() => el.classList.remove('bump'), 200);
+}
+
+function renderTodo() {
+  Object.keys(estado).forEach(k => {
+    if (k === 'otroTexto') return;
+    const el = document.getElementById('val-' + k);
+    if (el) el.textContent = estado[k];
+  });
+  document.getElementById('otroTexto').value = estado.otroTexto || '';
+}
+
+// ─────────────────────────────────────────────
+//  MODAL ENVASE NO CONFORME
+// ─────────────────────────────────────────────
+function abrirModalEnvase() {
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function confirmarEnvase(conTrasvasije) {
+  estado.envase = Math.max(0, estado.envase + 1);
+  renderVal('envase');
+  if (conTrasvasije) {
+    estado.trasvasije = Math.max(0, estado.trasvasije + 1);
+    renderVal('trasvasije');
+    mostrarToast('Envase +1 · Trasvasije +1', 'success');
+  } else {
+    mostrarToast('Envase no conforme +1', '');
+  }
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+// Cerrar modal tocando fondo
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('show');
+});
+
+// ─────────────────────────────────────────────
+//  GUARDAR / ACTUALIZAR
+// ─────────────────────────────────────────────
+async function guardarTurno() {
+  const fecha = document.getElementById('fechaInput').value;
+  if (!fecha) { mostrarToast('Selecciona una fecha', 'error'); return; }
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  const ahora = new Date();
+  const fechaMod = ahora.toLocaleDateString('es-CL') + ' ' + ahora.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'});
+
+  const payload = {
+    accion: 'guardar',
+    fecha,
+    turno,
+    fechaMod,
+    ...estado,
+    otroTexto: document.getElementById('otroTexto').value
+  };
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.ok) {
+      registroExistente = true;
+      document.getElementById('metaMod').textContent = 'Guardado: ' + fechaMod;
+      mostrarToast(registroExistente ? '✅ Turno actualizado' : '✅ Turno guardado', 'success');
+    } else {
+      mostrarToast('Error al guardar: ' + (data.error || 'desconocido'), 'error');
+    }
+  } catch(e) {
+    mostrarToast('Error de conexión', 'error');
+  }
+
+  btn.disabled = false;
+  btn.classList.remove('loading');
+}
+
+// ─────────────────────────────────────────────
+//  CARGAR REGISTRO EXISTENTE
+// ─────────────────────────────────────────────
+async function cargarRegistro() {
+  const fecha = document.getElementById('fechaInput').value;
+  if (!fecha || APPS_SCRIPT_URL === 'PEGAR_URL_APPS_SCRIPT_AQUI') return;
+
+  try {
+    const url = `${APPS_SCRIPT_URL}?accion=obtener&fecha=${fecha}&turno=${turno}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.ok && data.registro) {
+      registroExistente = true;
+      const r = data.registro;
+      Object.keys(estado).forEach(k => {
+        if (k === 'otroTexto') { estado[k] = r[k] || ''; }
+        else { estado[k] = parseInt(r[k]) || 0; }
+      });
+      renderTodo();
+      document.getElementById('metaMod').textContent = 'Últ. modificación: ' + (r.fechaMod || '—');
+    } else {
+      registroExistente = false;
+      resetEstado();
+      renderTodo();
+      document.getElementById('metaMod').textContent = 'Sin registro para esta fecha y turno';
+    }
+  } catch(e) {
+    // silencioso si no hay conexión al cargar
+  }
+}
+
+function resetEstado() {
+  Object.keys(estado).forEach(k => { estado[k] = k === 'otroTexto' ? '' : 0; });
+}
+
+// ─────────────────────────────────────────────
+//  HISTORIAL
+// ─────────────────────────────────────────────
+async function abrirHistorial() {
+  document.getElementById('histPanel').classList.add('show');
+  const body = document.getElementById('histBody');
+  body.innerHTML = '<div class="hist-empty">Cargando...</div>';
+
+  if (APPS_SCRIPT_URL === 'PEGAR_URL_APPS_SCRIPT_AQUI') {
+    body.innerHTML = '<div class="hist-empty">Configura la URL del Apps Script primero.</div>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${APPS_SCRIPT_URL}?accion=historial`);
+    const data = await res.json();
+    if (data.ok && data.registros && data.registros.length) {
+      body.innerHTML = data.registros.map(r => `
+        <div class="hist-card" onclick="cargarDesdeHistorial('${r.fecha}','${r.turno}')">
+          <div class="hist-card-top">
+            <div class="hist-date">${r.fecha}</div>
+            <div class="hist-turno ${r.turno === 'DIA' ? 'dia' : 'noche'}">${r.turno === 'DIA' ? '☀ Día' : '🌙 Noche'}</div>
+          </div>
+          <div class="hist-stats">
+            <span class="hist-stat">👷 <b>${r.operadores}</b></span>
+            <span class="hist-stat">📦 <b>${r.fcl}</b> FCL</span>
+            <span class="hist-stat">🔄 <b>${r.trasvasije}</b> trasvasije</span>
+            <span class="hist-stat">❌ <b>${(parseInt(r.envase)||0)+(parseInt(r.brssp)||0)+(parseInt(r.brcsp)||0)+(parseInt(r.boquilla)||0)+(parseInt(r.bolsa)||0)+(parseInt(r.sobrepeso)||0)+(parseInt(r.bajopeso)||0)+(parseInt(r.otro)||0)}</b> rechazos</span>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      body.innerHTML = '<div class="hist-empty">No hay registros guardados aún.</div>';
+    }
+  } catch(e) {
+    body.innerHTML = '<div class="hist-empty">Error al cargar historial.</div>';
+  }
+}
+
+function cerrarHistorial() {
+  document.getElementById('histPanel').classList.remove('show');
+}
+
+function cargarDesdeHistorial(fecha, t) {
+  document.getElementById('fechaInput').value = fecha;
+  setTurno(t);
+  cerrarHistorial();
+}
+
+// ─────────────────────────────────────────────
+//  TOAST
+// ─────────────────────────────────────────────
+let toastTimer;
+function mostrarToast(msg, tipo) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (tipo || '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ─────────────────────────────────────────────
+//  ARRANCAR
+// ─────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
